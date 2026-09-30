@@ -266,8 +266,8 @@ const waveRows = [...mainRows, bottomRow];
           <figure class="code">
             <figcaption>Sources/KeyClick/Clicker.swift</figcaption>
             <pre><code><span class="c-kw">let</span> mask = (<span class="c-n">1</span> &lt;&lt; <span class="c-t">CGEventType</span>.keyDown.rawValue)
-         | (<span class="c-n">1</span> &lt;&lt; <span class="c-t">CGEventType</span>.keyUp.rawValue)
-         | (<span class="c-n">1</span> &lt;&lt; <span class="c-t">CGEventType</span>.flagsChanged.rawValue)
+    | (<span class="c-n">1</span> &lt;&lt; <span class="c-t">CGEventType</span>.keyUp.rawValue)
+    | (<span class="c-n">1</span> &lt;&lt; <span class="c-t">CGEventType</span>.flagsChanged.rawValue)
 tap = <span class="c-t">CGEvent</span>.tapCreate(
     tap: .cgSessionEventTap,
     place: .headInsertEventTap,
@@ -531,8 +531,10 @@ tap = <span class="c-t">CGEvent</span>.tapCreate(
 
       select(pack);
       new ResizeObserver(measurePans).observe(kb);
+      // Phones scroll the keyboard sideways; start with G and H in the middle.
       const frame = kb.parentElement!;
-      frame.scrollLeft = (frame.scrollWidth - frame.clientWidth) / 2;
+      const home = keyEls.get("KeyH")!.getBoundingClientRect();
+      frame.scrollLeft += home.left - frame.getBoundingClientRect().width / 2;
 
       // The opening move: flat MacBook keys rise into keycaps, left to right.
       for (const [, el] of keyEls) {
@@ -1424,6 +1426,8 @@ tap = <span class="c-t">CGEvent</span>.tapCreate(
       .get {
         border-top: 1px solid var(--line);
         display: grid;
+        /* The keycap's underglow is wider than the phone screen. */
+        overflow-x: clip;
         gap: 1.75rem;
         justify-items: center;
         padding-block: clamp(5rem, 11vw, 9rem);
@@ -1445,7 +1449,16 @@ tap = <span class="c-t">CGEvent</span>.tapCreate(
         width: min(22rem, 100%);
       }
 
+      .big-key .cap {
+        background: #8f8f8b;
+      }
+
       .big-key .face {
+        background: linear-gradient(180deg, #fafaf7 0%, #ecece8 60%, #e2e2dd 100%);
+        box-shadow:
+          inset 0 1px 0 #fff,
+          inset 0 -1px 0 rgb(0 0 0 / 0.12);
+        color: #0a0a0b;
         align-content: center;
         gap: 0.35rem;
         justify-items: center;
@@ -1564,6 +1577,11 @@ tap = <span class="c-t">CGEvent</span>.tapCreate(
 
         .stem-type {
           display: none;
+        }
+
+        .code pre {
+          font-size: 0.6875rem;
+          padding-inline: 0.9rem;
         }
 
         .kb[data-mech="true"] {
