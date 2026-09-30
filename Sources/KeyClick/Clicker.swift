@@ -1,4 +1,5 @@
 import AVFoundation
+import Carbon.HIToolbox
 import CoreGraphics
 
 /// Listens to key presses (never their characters) and plays a switch sound for each.
@@ -50,6 +51,8 @@ final class Clicker: ObservableObject {
     private var sounds: [String: [String: AVAudioPCMBuffer]] = [:]
     private var tap: CFMachPort?
     private var retry: Timer?
+    private var idle: Timer?
+    private var hotKey: EventHotKeyRef?
 
     init() {
         packs = ((try? FileManager.default.contentsOfDirectory(atPath: Self.soundsURL.path)) ?? []).sorted()
@@ -62,11 +65,7 @@ final class Clicker: ObservableObject {
             engine.connect(player, to: engine.mainMixerNode, format: Self.format)
         }
         engine.mainMixerNode.outputVolume = volume
-        try? engine.start()
-        // Plugging in headphones or switching output stops the engine.
-        NotificationCenter.default.addObserver(forName: .AVAudioEngineConfigurationChange, object: engine, queue: .main) { [weak self] _ in
-            MainActor.assumeIsolated { try? self?.engine.start() }
-        }
+        registerShortcut()
 
         if !startTap() {
             CGRequestListenEventAccess()
@@ -119,6 +118,18 @@ final class Clicker: ObservableObject {
         return true
     }
 
+    /// ⌃⌥K turns the sound on and off from any app.
+    private func registerShortcut() {
+        var pressed = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
+        InstallEventHandler(GetApplicationEventTarget(), { _, _, refcon in
+            let clicker = Unmanaged<Clicker>.fromOpaque(refcon!).takeUnretainedValue()
+            MainActor.assumeIsolated { clicker.enabled.toggle() }
+            return noErr
+        }, 1, &pressed, Unmanaged.passUnretained(self).toOpaque(), nil)
+        RegisterEventHotKey(UInt32(kVK_ANSI_K), UInt32(controlKey | optionKey), EventHotKeyID(signature: 0x4B434C4B, id: 1),
+                            GetApplicationEventTarget(), 0, &hotKey)
+    }
+
     private func handle(_ type: CGEventType, keyCode: Int64, flags: CGEventFlags, isRepeat: Bool) {
         switch type {
         case .tapDisabledByTimeout, .tapDisabledByUserInput:
@@ -138,11 +149,18 @@ final class Clicker: ObservableObject {
     }
 
     private func play(_ action: String, _ keyCode: Int64) {
-        guard enabled, engine.isRunning, let recorded = sounds[action] else { return }
+        guard enabled, let recorded = sounds[action] else { return }
         // Keys a pack did not record (Fn, F13…) borrow a random letter.
         guard let buffer = Self.keyNames[keyCode].flatMap({ recorded[$0] })
             ?? recorded.filter({ $0.key.hasPrefix("Key") }).randomElement()?.value
         else { return }
+        // A running engine makes coreaudiod hold a PreventUserIdleSystemSleep assertion, so it runs only while you
+        // type. Starting it again (also after an output change stops it) measured 4-7 ms on built-in speakers.
+        if !engine.isRunning { try? engine.start() }
+        idle?.invalidate()
+        idle = Timer.scheduledTimer(withTimeInterval: 30, repeats: false) { [weak self] _ in
+            MainActor.assumeIsolated { self?.engine.stop() }
+        }
         let player = players[nextPlayer]
         nextPlayer = (nextPlayer + 1) % players.count
         player.volume = .random(in: 0.85...1)

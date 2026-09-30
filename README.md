@@ -6,8 +6,9 @@ Mechanical keyboard sounds for your Mac. KeyClick lives in the menu bar and play
 
 - 5 switches: MX Brown, MX Black, MX Red, MX Blue, Topre
 - Every key has its own recording, for press and for release
-- Volume, on/off, open at login
-- Native Swift, no dependencies, ~200 lines
+- Volume, on/off (⌃⌥K from any app), open at login
+- Updates itself
+- Native Swift, ~220 lines, one dependency ([Sparkle](https://sparkle-project.org), for updates)
 
 ## Install
 
@@ -22,7 +23,13 @@ The agent does everything except turning on Input Monitoring, which only you can
 <details>
 <summary>Or install it yourself</summary>
 
-Download `KeyClick.zip` from [Releases](../../releases), unzip, and move `KeyClick.app` to Applications.
+With [Homebrew](https://brew.sh):
+
+```sh
+brew install --cask mohalkurdi/tap/keyclick
+```
+
+Or download `KeyClick.zip` from [Releases](../../releases), unzip, and move `KeyClick.app` to Applications.
 It is not notarized yet, so the first launch is blocked. Open **System Settings → Privacy & Security**, scroll down and click **Open Anyway** next to KeyClick. Or run `xattr -dr com.apple.quarantine /Applications/KeyClick.app` once.
 
 macOS will ask for **Input Monitoring** permission. Allow it in
@@ -34,7 +41,8 @@ System Settings → Privacy & Security → Input Monitoring.
 
 KeyClick uses a listen-only event tap: it can see *that* a key was pressed, never change or block it.
 It reads which physical key was hit (its key code, not the typed character) to play that key's recording.
-It does not store, log or send anything, and it has no network code. macOS hides keystrokes in password fields from it.
+It does not store, log or send anything about your typing, and macOS hides keystrokes in password fields from it.
+The only network request is Sparkle checking GitHub for a new version once a day; it sends nothing about your typing.
 Read [`Sources/KeyClick/Clicker.swift`](Sources/KeyClick/Clicker.swift) to check.
 
 ## Build
@@ -44,11 +52,15 @@ Requires Xcode 16 or newer.
 ```sh
 make run                                           # build build/KeyClick.app and open it
 make run SIGN_ID="Apple Development: you@example"  # keeps the permission across rebuilds
-make zip                                           # build/KeyClick.zip for a release
+make zip                                           # build/KeyClick.zip
 ```
 
 With the default ad-hoc signature, macOS treats every rebuild as a new app: remove KeyClick from
 Input Monitoring and allow it again after rebuilding.
+
+Releases are built by CI: push a `v*` tag. The workflow signs the app with the project's self-signed
+certificate (so the permission survives updates), publishes `KeyClick.zip` and the Sparkle feed
+`appcast.xml`, and bumps the [Homebrew tap](https://github.com/MohAlkurdi/homebrew-tap).
 
 ## Sound packs
 

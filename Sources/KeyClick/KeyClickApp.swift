@@ -1,15 +1,22 @@
 import AppKit
 import ServiceManagement
+import Sparkle
 import SwiftUI
 
 @main
 struct KeyClickApp: App {
     @StateObject private var clicker = Clicker()
+    private let updater = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
 
     var body: some Scene {
         MenuBarExtra("KeyClick", systemImage: clicker.enabled ? "keyboard.fill" : "keyboard") {
             VStack(alignment: .leading, spacing: 12) {
-                Toggle("Sound", isOn: $clicker.enabled)
+                Toggle(isOn: $clicker.enabled) {
+                    HStack {
+                        Text("Sound")
+                        Text("⌃⌥K").foregroundStyle(.secondary)
+                    }
+                }
                 if !clicker.hasPermission {
                     Text("KeyClick needs Input Monitoring to hear your keys.")
                         .font(.callout)
@@ -29,6 +36,7 @@ struct KeyClickApp: App {
                     }
                 ))
                 Divider()
+                Button("Check for Updates…") { updater.checkForUpdates(nil) }
                 Button("Quit KeyClick") { NSApp.terminate(nil) }
             }
             .toggleStyle(.switch)

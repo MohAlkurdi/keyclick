@@ -7,12 +7,73 @@ on:
 permissions:
   contents: write
 
+env:
+  # SHA-1 of the self-signed "KeyClick Signing" certificate in SIGNING_P12. codesign only accepts an untrusted
+  # identity by hash. Keep signing with this certificate: macOS ties the Input Monitoring grant to it.
+  SIGN_ID: 136615C91F95E51E2AC647B7DF8C7484CB822617
+
 jobs:
-  build:
+  release:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-      - run: make zip
-      - run: gh release create "$GITHUB_REF_NAME" build/KeyClick.zip --title "KeyClick $GITHUB_REF_NAME" --generate-notes
+
+      - name: Import signing certificate
+        env:
+          P12: ${{ secrets.SIGNING_P12 }}
+          P12_PASSWORD: ${{ secrets.SIGNING_P12_PASSWORD }}
+        run: |
+          KC="$RUNNER_TEMP/sign.keychain-db"
+          PW=$(openssl rand -hex 16)
+          security create-keychain -p "$PW" "$KC"
+          security set-keychain-settings -lut 3600 "$KC"
+          security unlock-keychain -p "$PW" "$KC"
+          echo "$P12" | base64 --decode > "$RUNNER_TEMP/sign.p12"
+          security import "$RUNNER_TEMP/sign.p12" -k "$KC" -P "$P12_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$PW" "$KC"
+          security list-keychains -d user -s "$KC" $(security list-keychains -d user | tr -d '"')
+
+      - run: make zip VERSION="${GITHUB_REF_NAME#v}"
+
+      - name: Write the update feed
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: |
+          curl -fsSL https://github.com/sparkle-project/Sparkle/releases/download/2.10.0/Sparkle-2.10.0.tar.xz | tar -xJ -C "$RUNNER_TEMP"
+          SIGNATURE=$(echo "$SPARKLE_PRIVATE_KEY" | "$RUNNER_TEMP/bin/sign_update" --ed-key-file - build/KeyClick.zip)
+          VERSION="${GITHUB_REF_NAME#v}"
+          cat > build/appcast.xml <<XML
+          <?xml version="1.0" encoding="utf-8"?>
+          <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+            <channel>
+              <title>KeyClick</title>
+              <item>
+                <title>KeyClick $VERSION</title>
+                <pubDate>$(date -u "+%a, %d %b %Y %H:%M:%S +0000")</pubDate>
+                <sparkle:version>$VERSION</sparkle:version>
+                <sparkle:shortVersionString>$VERSION</sparkle:shortVersionString>
+                <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
+                <enclosure url="https://github.com/MohAlkurdi/keyclick/releases/download/$GITHUB_REF_NAME/KeyClick.zip" type="application/octet-stream" $SIGNATURE/>
+              </item>
+            </channel>
+          </rss>
+          XML
+
+      - run: gh release create "$GITHUB_REF_NAME" build/KeyClick.zip build/appcast.xml --title "KeyClick $GITHUB_REF_NAME" --generate-notes
         env:
           GH_TOKEN: ${{ github.token }}
+
+      - name: Update the Homebrew tap
+        env:
+          TAP_DEPLOY_KEY: ${{ secrets.TAP_DEPLOY_KEY }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          SHA=$(shasum -a 256 build/KeyClick.zip | cut -d " " -f 1)
+          eval "$(ssh-agent -s)"
+          echo "$TAP_DEPLOY_KEY" | ssh-add -
+          mkdir -p ~/.ssh && ssh-keyscan github.com >> ~/.ssh/known_hosts
+          git clone git@github.com:MohAlkurdi/homebrew-tap.git "$RUNNER_TEMP/tap"
+          cd "$RUNNER_TEMP/tap"
+          sed -i "" -e "s/^  version \".*\"/  version \"$VERSION\"/" -e "s/^  sha256 \".*\"/  sha256 \"$SHA\"/" Casks/keyclick.rb
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -am "keyclick $VERSION"
+          git push

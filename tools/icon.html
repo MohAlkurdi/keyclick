@@ -1,0 +1,21 @@
+<!-- KeyClick app icon. Render at 1024×1024 with a transparent background, then build AppIcon.icns with sips + iconutil. -->
+<!doctype html><html><head><style>
+@font-face { font-family: HG; src: url(https://cdn.jsdelivr.net/fontsource/fonts/hanken-grotesk:vf@latest/latin-wght-normal.woff2) format('woff2'); font-weight: 100 900; }
+html,body { margin:0; background: transparent; }
+.canvas { width:1024px; height:1024px; position:relative; }
+.tile { position:absolute; left:100px; top:100px; width:824px; height:824px; border-radius:185px; overflow:hidden;
+  background: radial-gradient(120% 90% at 50% 0%, #26262a 0%, #111113 55%, #09090a 100%);
+  box-shadow: 0 18px 40px rgba(0,0,0,.45), inset 0 2px 0 rgba(255,255,255,.08), inset 0 0 0 2px rgba(255,255,255,.04); }
+.glow { position:absolute; left:50%; top:66%; width:720px; height:420px; transform:translate(-50%,-50%);
+  background: radial-gradient(closest-side, rgba(214,146,88,.85), rgba(192,133,82,.35) 50%, rgba(192,133,82,.08) 80%, transparent); filter: blur(24px); }
+.key { position:absolute; left:50%; top:50%; width:480px; height:480px; transform:translate(-50%,-47%); }
+.base { position:absolute; inset:0; border-radius:92px; background: var(--base); box-shadow: 0 30px 90px 10px rgba(212,142,84,.55), 0 8px 30px rgba(212,142,84,.35), 0 24px 40px rgba(0,0,0,.35), inset 0 -6px 0 rgba(0,0,0,.25), inset 0 2px 0 rgba(255,255,255,.35); }
+.face { position:absolute; left:44px; right:44px; top:22px; bottom:78px; border-radius:66px; background: var(--face);
+  box-shadow: inset 0 3px 0 var(--hl), 0 6px 14px rgba(0,0,0,.25); display:grid; place-items:center; }
+.face span { font-family: HG; font-weight: 600; font-size: 230px; letter-spacing:-.02em; color: var(--ink); line-height:1; transform: translateY(-4px); }
+.ivory { --base: linear-gradient(180deg,#a3a39e,#7d7d78); --face: linear-gradient(180deg,#fbfbf8 0%,#ececE8 60%,#e0e0db 100%); --hl:#fff; --ink:#111113; }
+.dark { --base: linear-gradient(180deg,#2c2c30,#161618); --face: linear-gradient(180deg,#3b3b40 0%,#2b2b2f 70%,#242428 100%); --hl: rgba(255,255,255,.14); --ink:#efefec; }
+</style></head><body>
+<div class="canvas"><div class="tile"><div class="glow"></div><div class="key" id="k"><div class="base"></div><div class="face"><span>K</span></div></div></div></div>
+<script>document.getElementById("k").className = "key " + (location.hash.slice(1) || "ivory");</script>
+</body></html>
