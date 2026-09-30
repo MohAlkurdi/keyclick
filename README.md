@@ -17,10 +17,20 @@ It is not notarized yet, so the first launch is blocked. Open **System Settings 
 macOS will ask for **Input Monitoring** permission. Allow it in
 System Settings → Privacy & Security → Input Monitoring.
 
+### With an AI agent
+
+Paste this into Claude Code, Codex or any agent that can run terminal commands:
+
+```
+Install KeyClick on this Mac by following https://raw.githubusercontent.com/MohAlkurdi/keyclick/main/INSTALL.md
+```
+
+The agent does everything except turning on Input Monitoring, which only you can do. The steps are in [`INSTALL.md`](INSTALL.md).
+
 ## Privacy
 
 KeyClick uses a listen-only event tap: it can see *that* a key was pressed, never change or block it.
-It only looks at which key group was hit (space, enter, backspace, other) to pick a sound.
+It reads which physical key was hit (its key code, not the typed character) to play that key's recording.
 It does not store, log or send anything, and it has no network code. macOS hides keystrokes in password fields from it.
 Read [`Sources/KeyClick/Clicker.swift`](Sources/KeyClick/Clicker.swift) to check.
 
