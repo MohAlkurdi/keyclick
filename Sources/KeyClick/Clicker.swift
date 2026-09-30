@@ -23,24 +23,37 @@ final class Clicker: ObservableObject {
     let packs: [String]
 
     private static let soundsURL = Bundle.main.resourceURL!.appendingPathComponent("Sounds")
-    // ponytail: every bundled pack is 48 kHz mono; user-supplied packs would need converting to this.
-    private static let format = AVAudioFormat(standardFormatWithSampleRate: 48_000, channels: 1)!
+    // ponytail: every bundled pack is 48 kHz stereo; user-supplied packs would need converting to this.
+    private static let format = AVAudioFormat(standardFormatWithSampleRate: 48_000, channels: 2)!
     private static let modifierFlags: [Int64: CGEventFlags] = [
         54: .maskCommand, 55: .maskCommand, 56: .maskShift, 60: .maskShift,
         58: .maskAlternate, 61: .maskAlternate, 59: .maskControl, 62: .maskControl, 63: .maskSecondaryFn,
     ]
     private static let capsLock: Int64 = 57
+    /// macOS virtual key code → KeyboardEvent.code, the file names in each pack.
+    private static let keyNames: [Int64: String] = [
+        0: "KeyA", 1: "KeyS", 2: "KeyD", 3: "KeyF", 4: "KeyH", 5: "KeyG", 6: "KeyZ", 7: "KeyX", 8: "KeyC", 9: "KeyV",
+        11: "KeyB", 12: "KeyQ", 13: "KeyW", 14: "KeyE", 15: "KeyR", 16: "KeyY", 17: "KeyT", 18: "Digit1", 19: "Digit2",
+        20: "Digit3", 21: "Digit4", 22: "Digit6", 23: "Digit5", 24: "Equal", 25: "Digit9", 26: "Digit7", 27: "Minus",
+        28: "Digit8", 29: "Digit0", 30: "BracketRight", 31: "KeyO", 32: "KeyU", 33: "BracketLeft", 34: "KeyI", 35: "KeyP",
+        36: "Enter", 37: "KeyL", 38: "KeyJ", 39: "Quote", 40: "KeyK", 41: "Semicolon", 42: "Backslash", 43: "Comma",
+        44: "Slash", 45: "KeyN", 46: "KeyM", 47: "Period", 48: "Tab", 49: "Space", 50: "Backquote", 51: "Backspace",
+        53: "Escape", 54: "MetaRight", 55: "MetaLeft", 56: "ShiftLeft", 57: "CapsLock", 58: "AltLeft", 59: "ControlLeft",
+        60: "ShiftRight", 61: "AltRight", 62: "ControlRight", 76: "Enter", 96: "F5", 97: "F6", 98: "F7", 99: "F3",
+        100: "F8", 101: "F9", 103: "F11", 109: "F10", 111: "F12", 115: "Home", 116: "PageUp", 117: "Delete", 118: "F4",
+        119: "End", 120: "F2", 121: "PageDown", 122: "F1", 123: "ArrowLeft", 124: "ArrowRight", 125: "ArrowDown", 126: "ArrowUp",
+    ]
 
     private let engine = AVAudioEngine()
     private let players = (0..<8).map { _ in AVAudioPlayerNode() }
     private var nextPlayer = 0
-    private var sounds: [String: [AVAudioPCMBuffer]] = [:]
+    private var sounds: [String: [String: AVAudioPCMBuffer]] = [:]
     private var tap: CFMachPort?
     private var retry: Timer?
 
     init() {
         packs = ((try? FileManager.default.contentsOfDirectory(atPath: Self.soundsURL.path)) ?? []).sorted()
-        let saved = UserDefaults.standard.string(forKey: "pack") ?? "Cream"
+        let saved = UserDefaults.standard.string(forKey: "pack") ?? "MX Brown"
         pack = packs.contains(saved) ? saved : packs.first ?? ""
         load()
 
@@ -65,12 +78,11 @@ final class Clicker: ObservableObject {
 
     private func load() {
         sounds = [:]
-        let root = Self.soundsURL.appendingPathComponent(pack)
         for action in ["press", "release"] {
-            for group in ["default", "space", "enter", "backspace"] {
-                let dir = root.appendingPathComponent("\(action)/\(group)")
-                let files = (try? FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil)) ?? []
-                sounds["\(action)/\(group)"] = files.compactMap(Self.buffer)
+            let dir = Self.soundsURL.appendingPathComponent("\(pack)/\(action)")
+            let files = (try? FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil)) ?? []
+            for file in files {
+                sounds[action, default: [:]][file.deletingPathExtension().lastPathComponent] = Self.buffer(file)
             }
         }
     }
@@ -126,17 +138,14 @@ final class Clicker: ObservableObject {
     }
 
     private func play(_ action: String, _ keyCode: Int64) {
-        guard enabled, engine.isRunning else { return }
-        let group = switch keyCode {
-        case 49: "space"
-        case 36, 76: "enter"
-        case 51, 117: "backspace"
-        default: "default"
-        }
-        guard let buffer = sounds["\(action)/\(group)"]?.randomElement() ?? sounds["\(action)/default"]?.randomElement() else { return }
+        guard enabled, engine.isRunning, let recorded = sounds[action] else { return }
+        // Keys a pack did not record (Fn, F13…) borrow a random letter.
+        guard let buffer = Self.keyNames[keyCode].flatMap({ recorded[$0] })
+            ?? recorded.filter({ $0.key.hasPrefix("Key") }).randomElement()?.value
+        else { return }
         let player = players[nextPlayer]
         nextPlayer = (nextPlayer + 1) % players.count
-        player.volume = .random(in: 0.8...1)
+        player.volume = .random(in: 0.85...1)
         player.scheduleBuffer(buffer, at: nil, options: .interrupts)
         player.play()
     }
