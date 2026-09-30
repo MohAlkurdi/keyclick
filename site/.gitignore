@@ -1,0 +1,5 @@
+node_modules/
+dist/
+.astro/
+public/sounds/
+src/data/

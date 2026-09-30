@@ -2,8 +2,10 @@
 
 Mechanical keyboard sounds for your Mac. KeyClick lives in the menu bar and plays a real switch recording every time you press and release a key.
 
-- 12 switch sounds: Cream, Holy Panda, MX Blue, MX Brown, Topre and more
-- Different sounds for space, enter and backspace, and for press and release
+**[Try it in your browser](https://mohalkurdi.github.io/keyclick/)**
+
+- 5 switches: MX Brown, MX Black, MX Red, MX Blue, Topre
+- Every key has its own recording, for press and for release
 - Volume, on/off, open at login
 - Native Swift, no dependencies, ~200 lines
 
@@ -37,20 +39,25 @@ Input Monitoring and allow it again after rebuilding.
 
 ## Sound packs
 
-Each folder in `Sounds/` is one switch:
+Each folder in `Sounds/` is one switch, with one file per key named by its
+[`KeyboardEvent.code`](https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_code_values):
 
 ```
-Sounds/<Switch name>/press/default/*.wav      # one is picked at random per key
-Sounds/<Switch name>/press/{space,enter,backspace}/*.wav
-Sounds/<Switch name>/release/...              # same layout for key release
+Sounds/<Switch name>/press/KeyA.wav
+Sounds/<Switch name>/release/KeyA.wav
 ```
 
-Missing groups fall back to `default`. Files must be 48 kHz mono WAV.
+A key with no file borrows a random letter. Files must be 48 kHz stereo WAV.
+`tools/slice_mechvibes.py` builds a pack from a Mechvibes sprite pack.
 
 ## Credits
 
-Switch recordings by Thomas Lai from [kbsim](https://github.com/tplai/kbsim) (MIT), converted by
-[KeyTone](https://github.com/rushabhcodes/KeyTone). See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+Switch recordings from [Mechvibes](https://github.com/hainguyents13/mechvibes) by Hai Nguyen (MIT).
+See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+## Website
+
+The landing page lives in `site/` (Astro). `cd site && npm install && npm run dev`.
 
 ## License
 
