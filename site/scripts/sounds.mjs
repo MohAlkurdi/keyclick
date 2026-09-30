@@ -5,7 +5,7 @@ import { join } from "node:path";
 
 const SOURCE = "../Sounds";
 const RATE = 48_000;
-const TYPES = { "MX Black": "Linear", "MX Red": "Linear", "MX Brown": "Tactile", "MX Blue": "Clicky", Topre: "Topre" };
+const TYPES = { "MX Black": "Linear", "MX Red": "Linear", "MX Brown": "Tactile", "MX Blue": "Clicky", Topre: "Electro-capacitive" };
 const ORDER = ["MX Brown", "MX Black", "MX Red", "MX Blue", "Topre"];
 
 function readWav(path) {

@@ -21,6 +21,6 @@ STORY: See the keyboard, type, and hear it. Flip KeyClick off and hear the silen
 
 FIRST VIEWPORT: A minimal nav. A centred two-line headline, one support line, a white Download button and the requirements. The echo line of what you type. A full-width keyboard in perspective, and under it the On/Off switch and five switch stems.
 
-FORM: A self-directed redesign after the user's rejection (the "prove, don't claim" keyboard); replaces seed 1151358f. Signature interaction: on load the flat keys rise into keycaps in a left-to-right wave; key presses sink the cap and light the stem colour underneath; the On/Off switch morphs the keys flat ↔ mechanical.
+FORM: The concept roll was deliberately bypassed. The user rejected the first rolled build (seed 1151358f, "Sample Pack") as generic, and asked for a pro build, so this form comes from the product's own mechanism: the keyboard is the demo. Signature interaction: on load the flat keys rise into keycaps in a left-to-right wave; key presses sink the cap and light the stem colour underneath; the On/Off switch morphs the keys flat ↔ mechanical. Below the fold the world carries through: a playable waveform map laid out as the keyboard, the real listen-only Swift lines as privacy proof, and a physical keycap as the final Download.
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
