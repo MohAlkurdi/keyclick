@@ -12,7 +12,7 @@ Mechanical keyboard sounds for your Mac. KeyClick lives in the menu bar and play
 ## Install
 
 Download `KeyClick.zip` from [Releases](../../releases), unzip, and move `KeyClick.app` to Applications.
-The first time, right-click the app and choose **Open** (it is not notarized yet).
+It is not notarized yet, so the first launch is blocked. Open **System Settings → Privacy & Security**, scroll down and click **Open Anyway** next to KeyClick. Or run `xattr -dr com.apple.quarantine /Applications/KeyClick.app` once.
 
 macOS will ask for **Input Monitoring** permission. Allow it in
 System Settings → Privacy & Security → Input Monitoring.
