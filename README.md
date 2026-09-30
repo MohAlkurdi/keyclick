@@ -11,14 +11,6 @@ Mechanical keyboard sounds for your Mac. KeyClick lives in the menu bar and play
 
 ## Install
 
-Download `KeyClick.zip` from [Releases](../../releases), unzip, and move `KeyClick.app` to Applications.
-It is not notarized yet, so the first launch is blocked. Open **System Settings → Privacy & Security**, scroll down and click **Open Anyway** next to KeyClick. Or run `xattr -dr com.apple.quarantine /Applications/KeyClick.app` once.
-
-macOS will ask for **Input Monitoring** permission. Allow it in
-System Settings → Privacy & Security → Input Monitoring.
-
-### With an AI agent
-
 Paste this into Claude Code, Codex or any agent that can run terminal commands:
 
 ```
@@ -26,6 +18,17 @@ Install KeyClick on this Mac by following https://raw.githubusercontent.com/MohA
 ```
 
 The agent does everything except turning on Input Monitoring, which only you can do. The steps are in [`INSTALL.md`](INSTALL.md).
+
+<details>
+<summary>Or install it yourself</summary>
+
+Download `KeyClick.zip` from [Releases](../../releases), unzip, and move `KeyClick.app` to Applications.
+It is not notarized yet, so the first launch is blocked. Open **System Settings → Privacy & Security**, scroll down and click **Open Anyway** next to KeyClick. Or run `xattr -dr com.apple.quarantine /Applications/KeyClick.app` once.
+
+macOS will ask for **Input Monitoring** permission. Allow it in
+System Settings → Privacy & Security → Input Monitoring.
+
+</details>
 
 ## Privacy
 
