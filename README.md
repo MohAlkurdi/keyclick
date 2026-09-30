@@ -2,7 +2,7 @@
 
 Mechanical keyboard sounds for your Mac. KeyClick lives in the menu bar and plays a real switch recording every time you press and release a key.
 
-**[Try it in your browser](https://mohalkurdi.github.io/keyclick/)**
+**[Try it in your browser](https://mohalkurdi.github.io/keyclick-site/)**
 
 - 5 switches: MX Brown, MX Black, MX Red, MX Blue, Topre
 - Every key has its own recording, for press and for release
@@ -57,7 +57,7 @@ See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ## Website
 
-The landing page lives in `site/` (Astro). `cd site && npm install && npm run dev`.
+The landing page has its own repo: [keyclick-site](https://github.com/MohAlkurdi/keyclick-site).
 
 ## License
 
