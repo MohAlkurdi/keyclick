@@ -156,7 +156,11 @@ final class Clicker: ObservableObject {
         else { return }
         // A running engine makes coreaudiod hold a PreventUserIdleSystemSleep assertion, so it runs only while you
         // type. Starting it again (also after an output change stops it) measured 4-7 ms on built-in speakers.
-        if !engine.isRunning { try? engine.start() }
+        // Players left over from a stopped engine report playing but output silence until they are stopped too.
+        if !engine.isRunning {
+            players.forEach { $0.stop() }
+            try? engine.start()
+        }
         idle?.invalidate()
         idle = Timer.scheduledTimer(withTimeInterval: 30, repeats: false) { [weak self] _ in
             MainActor.assumeIsolated { self?.engine.stop() }
